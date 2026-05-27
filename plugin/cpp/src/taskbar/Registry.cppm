@@ -13,6 +13,9 @@ private:
 
 public:
     static auto onWatch(const Registry::Callback &callback) -> void {
+        CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        struct CoGuard { ~CoGuard() { CoUninitialize(); } } coGuard;
+
         HKEY key = nullptr;
         HANDLE event = CreateEventW(nullptr, true, false, nullptr);
         RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion", 0, KEY_NOTIFY, &key);

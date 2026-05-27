@@ -9,22 +9,31 @@ function parseLyric(lyricText) {
     try {
         const lines = lyricText.split("\n");
         for (const line of lines) {
-            if (line[0] == "[") {
-                const timeEndIndex = line.indexOf("]");
-                if (timeEndIndex === -1) continue;
-                const lyric = {
-                    time: timeToSeconds(line.slice(1, timeEndIndex)),
-                    text: line.slice(timeEndIndex + 1)
-                };
-                if (lyric.text.trim()) {
-                    result.push(lyric);
+            if (line[0] !== "[") continue;
+            const timestamps = [];
+            let pos = 0;
+            while (pos < line.length && line[pos] === "[") {
+                const closeIdx = line.indexOf("]", pos);
+                if (closeIdx === -1) break;
+                const content = line.slice(pos + 1, closeIdx);
+                if (/^\d+:\d+\.\d+$/.test(content)) {
+                    timestamps.push(timeToSeconds(content));
+                    pos = closeIdx + 1;
+                } else {
+                    break;
+                }
+            }
+            const text = line.slice(pos);
+            if (timestamps.length > 0 && text.trim()) {
+                for (const time of timestamps) {
+                    result.push({ time, text });
                 }
             }
         }
     } catch (error) {
         console.error("[Taskbar Lyrics] Error parsing lyrics:", error);
     }
-    return result;
+    return result.sort((a, b) => a.time - b.time);
 }
 
 
@@ -35,7 +44,9 @@ async function getLyric(id) {
             throw new Error(`Failed to fetch lyrics: ${response.status} ${response.statusText}`);
         }
         const lyric = await response.json();
-        return parseLyric(lyric.lrc.lyric);
+        const lrcLines = parseLyric(lyric.lrc?.lyric ?? "");
+        const translationMap = new Map(parseLyric(lyric.tlyric?.lyric ?? "").map(l => [l.time, l.text]));
+        return lrcLines.map(l => translationMap.has(l.time) ? { ...l, translation: translationMap.get(l.time) } : l);
     } catch (error) {
         console.error("[Taskbar Lyrics] Error fetching lyrics:", error);
         return [];

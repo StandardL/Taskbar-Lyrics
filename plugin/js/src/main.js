@@ -32,8 +32,17 @@ new class {
         try {
             new LyricObserver((lyrics, index) => {
                 try {
-                    config.lyric_primary = lyrics[lyrics[index].time == -1 ? 0 : index + (index & 1)]?.text ?? "";
-                    config.lyric_secondary = lyrics[lyrics[index].time == -1 ? 1 : index + !(index & 1)]?.text ?? "";
+                    const current = lyrics[index];
+                    if (current?.time == -1) {
+                        config.lyric_primary = lyrics[0]?.text ?? "";
+                        config.lyric_secondary = lyrics[1]?.text ?? "";
+                    } else if (current?.translation !== undefined) {
+                        config.lyric_primary = current.text ?? "";
+                        config.lyric_secondary = current.translation;
+                    } else {
+                        config.lyric_primary = lyrics[index + (index & 1)]?.text ?? "";
+                        config.lyric_secondary = lyrics[index + !(index & 1)]?.text ?? "";
+                    }
                     updateConfig();
                 } catch (error) {
                     console.error("[Taskbar Lyrics] Error updating lyrics:", error);
@@ -51,15 +60,17 @@ new class {
         const generalSection = createSection("general", "通用设置");
         generalSection.appendChild(createRow(
             "字体",
-            createSelect([
-                "Microsoft YaHei UI",
-                "SimSun",
-                "SimHei",
-                "KaiTi",
-                "Arial",
-                "Times New Roman",
-                "Consolas"
-            ], config.font_family, value => {
+            createSelect({
+                "Microsoft YaHei UI": "Microsoft YaHei UI",
+                "SimSun": "SimSun",
+                "SimHei": "SimHei",
+                "KaiTi": "KaiTi",
+                "Arial": "Arial",
+                "Times New Roman": "Times New Roman",
+                "Consolas": "Consolas",
+                "One UI PingFang SC VF": "One UI PingFang SC VF",
+                "MiSans": "MiSans",
+            }, config.font_family, value => {
                 config.font_family = value;
                 updateConfig();
             })

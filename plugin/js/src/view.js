@@ -176,7 +176,7 @@ export function createCheckbox(checked, onChangeCallback) {
  * @param {string} title 分类标题文本
  * @returns {HTMLElement} 分类容器元素
  */
-export function createSection(title) {
+export function createSection(id, title) {
     const section = document.createElement("div");
     section.style.cssText = `
         margin-bottom: 20px;
@@ -187,8 +187,7 @@ export function createSection(title) {
     `;
     // 创建并添加标题
     const sectionTitle = document.createElement("h3");
-    sectionTitle.textContent = title;
-    sectionTitle.style.cssText = `
+    sectionTitle.textContent = title;    sectionTitle.style.cssText = `
         margin-top: 0;
         margin-bottom: 15px;
         padding-bottom: 8px;
